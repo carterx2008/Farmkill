@@ -1,0 +1,65 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local TELEPORT_TARGET = Vector3.new(-59, 6, 129)
+
+local function teleportToPart()
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 10)
+	if humanoidRootPart then
+		humanoidRootPart.CFrame = CFrame.new(TELEPORT_TARGET) + Vector3.new(0, 3, 0)
+	end
+end
+
+local function applyEffect(tool)
+	if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+		local handle = tool.Handle
+		handle.Massless = true
+		handle.Transparency = 1
+		handle.Size = Vector3.new(60, 60, 60)
+	end
+end
+
+local function applyEffectToCurrentTools()
+	local character = player.Character
+	if character then
+		for _, v in pairs(character:GetChildren()) do
+			applyEffect(v)
+		end
+	end
+end
+
+teleportToPart()
+applyEffectToCurrentTools()
+
+player.CharacterAdded:Connect(function(char)
+	char:WaitForChild("HumanoidRootPart")
+	task.wait(0.5)
+	teleportToPart()
+	char.ChildAdded:Connect(function(child)
+		task.wait(0.1)
+		applyEffect(child)
+	end)
+end)
+
+player.Backpack.ChildAdded:Connect(function(tool)
+	task.wait(0.1)
+	applyEffect(tool)
+end)
+
+task.spawn(function()
+	while true do
+		local character = player.Character
+		if character then
+			for _, tool in pairs(character:GetChildren()) do
+				if tool:IsA("Tool") then
+					pcall(function()
+						tool:Activate()
+					end)
+				end
+			end
+		end
+		task.wait(0.1) 
+	end
+end)
