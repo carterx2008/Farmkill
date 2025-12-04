@@ -1,65 +1,61 @@
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
-local TELEPORT_TARGET = Vector3.new(-59, 6, 129)
+local TELEPORT_TARGET = Vector3.new(775, 43, 52)
 
-local function teleportToPart()
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 10)
-	if humanoidRootPart then
-		humanoidRootPart.CFrame = CFrame.new(TELEPORT_TARGET) + Vector3.new(0, 3, 0)
-	end
+local function instantSpawn(char)
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    hrp.CFrame = CFrame.new(TELEPORT_TARGET)
+    char.PrimaryPart = hrp
+    char:SetPrimaryPartCFrame(CFrame.new(TELEPORT_TARGET))
 end
 
-local function applyEffect(tool)
-	if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-		local handle = tool.Handle
-		handle.Massless = true
-		handle.Transparency = 1
-		handle.Size = Vector3.new(60, 60, 60)
-	end
+if player.Character then
+    instantSpawn(player.Character)
 end
-
-local function applyEffectToCurrentTools()
-	local character = player.Character
-	if character then
-		for _, v in pairs(character:GetChildren()) do
-			applyEffect(v)
-		end
-	end
-end
-
-teleportToPart()
-applyEffectToCurrentTools()
 
 player.CharacterAdded:Connect(function(char)
-	char:WaitForChild("HumanoidRootPart")
-	task.wait(0.5)
-	teleportToPart()
-	char.ChildAdded:Connect(function(child)
-		task.wait(0.1)
-		applyEffect(child)
-	end)
+    instantSpawn(char)
+
+    char.ChildAdded:Connect(function(child)
+        task.wait(0.05)
+        if child:IsA("Tool") and child:FindFirstChild("Handle") then
+            local h = child.Handle
+            h.Massless = true
+            h.Transparency = 1
+            h.Size = Vector3.new(60,60,60)
+        end
+    end)
 end)
 
 player.Backpack.ChildAdded:Connect(function(tool)
-	task.wait(0.1)
-	applyEffect(tool)
+    task.wait(0.05)
+    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+        local h = tool.Handle
+        h.Massless = true
+        h.Transparency = 1
+        h.Size = Vector3.new(60,60,60)
+    end
 end)
 
 task.spawn(function()
-	while true do
-		local character = player.Character
-		if character then
-			for _, tool in pairs(character:GetChildren()) do
-				if tool:IsA("Tool") then
-					pcall(function()
-						tool:Activate()
-					end)
-				end
-			end
-		end
-		task.wait(0.1) 
-	end
+    while true do
+        local char = player.Character
+        if char then
+            for _, tool in ipairs(char:GetChildren()) do
+                if tool:IsA("Tool") then
+                    pcall(function()
+                        tool:Activate()
+                    end)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
 end)
+
+local folder = workspace:FindFirstChild("Folder")
+if folder and folder:FindFirstChild("Touch") then
+    folder.Touch:Destroy()
+end
